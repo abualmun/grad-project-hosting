@@ -1,11 +1,11 @@
-[build]
-  publish = "/"
-  command = ""  # No build command needed for a static site
 
 [build.environment]
-  API_URL = "https://sattam-back-end.onrender.com"  # Replace with your actual backend URL
+  # Replace with your actual backend URL
+  API_URL = "https://sattam-back-end.onrender.com"
 
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
+  from = "/api/*"
+  to = "https://sattam-back-end.onrender.com/api/:splat"
   status = 200
+  force = true
+  headers = {Access-Control-Allow-Origin = "*"}
