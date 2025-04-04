@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // API endpoints - Replace with your actual backend URL
     // Use a global variable if set in HTML, or fallback to a default URL
-    const API_BASE_URL = 'https://sattam-back-end.onrender.com';
+    const API_BASE_URL = 'https://back-end-misty-haze-3575.fly.dev/';
     const CLASSIFY_ENDPOINT = `${API_BASE_URL}/api/classify`;
     const DESCRIPTION_ENDPOINT = `${API_BASE_URL}/api/description`;
     

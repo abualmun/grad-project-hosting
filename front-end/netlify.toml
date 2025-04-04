@@ -1,11 +1,11 @@
 
 [build.environment]
   # Replace with your actual backend URL
-  API_URL = "https://sattam-back-end.onrender.com"
+  API_URL = "https://back-end-misty-haze-3575.fly.dev"
 
 [[redirects]]
   from = "/api/*"
-  to = "https://sattam-back-end.onrender.com/api/:splat"
+  to = "https://back-end-misty-haze-3575.fly.dev/api/:splat"
   status = 200
   force = true
   headers = {Access-Control-Allow-Origin = "*"}
