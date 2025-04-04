@@ -6,7 +6,6 @@ from torchvision.models import resnet18
 from PIL import Image
 import io
 import os
-import sqlite3
 import json
 
 app = Flask(__name__)
@@ -42,29 +41,27 @@ def load_class_names():
         # Placeholder class names if file doesn't exist
         return [f"Class_{i}" for i in range(14)]
 
-# Database setup
-def get_db_connection():
-    conn = sqlite3.connect('class_descriptions.db')
-    conn.row_factory = sqlite3.Row
-    return conn
+# Class descriptions - hardcoded for simplicity
+class_descriptions = {
+    0: "الحرم المكي (The Holy Mosque in Mecca) - The holiest mosque in Islam and the primary destination for the Hajj and Umrah pilgrimages. It surrounds the Kaaba, considered the most sacred site in Islam.",
+    1: "العلا (AlUla) - A historic city in northwestern Saudi Arabia, known for its stunning natural rock formations, archaeological sites including Hegra (Saudi Arabia's first UNESCO World Heritage site), and annual Winter at Tantora festival.",
+    2: "المسجد النبوي (The Prophet's Mosque) - Located in Medina, this is the second holiest site in Islam. It was built by Prophet Muhammad and houses his tomb.",
+    3: "جبل أحد (Mount Uhud) - A mountain north of Medina, famous for being the site of the Battle of Uhud fought in 625 CE. It has great historical and religious significance in Islamic history.",
+    4: "برج المملكة (Kingdom Tower) - Also known as Kingdom Centre, it's a 99-story skyscraper in Riyadh. With its distinctive inverted parabolic arch topped by a sky bridge, it's one of Saudi Arabia's most recognizable landmarks.",
+    5: "المصمك (Masmak Fort) - A clay and mud-brick fort in the old quarter of Riyadh, with distinctive features including high walls and watchtowers. It played a significant role in the history of Saudi Arabia's unification.",
+    6: "برج الفيصلية (Al Faisaliyah Tower) - One of the most distinctive skyscrapers in Riyadh, featuring a golden ball near its top that contains a restaurant with panoramic views of the city.",
+    7: "وادي حنيفة (Wadi Hanifa) - A valley that runs through the city of Riyadh. It has been transformed into an environmental, recreational and tourist destination with parks, walking paths, and water features.",
+    8: "فقيه أكواريوم (Fakieh Aquarium) - Located in Jeddah, it's the first and largest public aquarium in Saudi Arabia, housing a wide variety of marine life and offering educational exhibits.",
+    9: "كورنيش جدة (Jeddah Corniche) - A 30 km coastal resort area in Jeddah along the Red Sea. It features recreational areas, pavilions, large-scale sculptures, and the King Fahd Fountain, the tallest water fountain in the world.",
+    10: "برج مياه الخبر (Khobar Water Tower) - A distinctive landmark in the city of Khobar in the Eastern Province, known for its unique architectural design.",
+    11: "مسجد قباء (Quba Mosque) - Located in the outskirts of Medina, it's the oldest mosque in the world. According to Islamic tradition, it was founded by Prophet Muhammad when he arrived in Medina.",
+    12: "مسجد الراجحي (Al-Rajhi Mosque) - One of the largest mosques in Riyadh, known for its beautiful architecture combining traditional Islamic elements with modern design.",
+    13: "المتحف الوطني (The National Museum) - Located in Riyadh, it's the largest museum in Saudi Arabia showcasing the history, culture, and civilization of the Arabian Peninsula."
+}
 
-def init_db():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS class_descriptions (
-        class_index INTEGER PRIMARY KEY,
-        class_name TEXT NOT NULL,
-        description TEXT NOT NULL
-    )
-    ''')
-    conn.commit()
-    conn.close()
-
-# Initialize database and model on startup
+# Initialize model and class names on startup
 model = load_model()
 class_names = load_class_names()
-init_db()
 
 # Routes
 @app.route('/')
@@ -100,15 +97,10 @@ def classify_image():
             top_probs, top_indices = torch.topk(probs, num_to_return)
             
         # Get class name and description for the predicted class
-        class_name = class_names[class_idx] if class_idx < len(class_names) else f"Class_{class_idx}"
+        class_name = class_names[str(class_idx)] if str(class_idx) in class_names else f"Class_{class_idx}"
         
-        # Get description from the database
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT description FROM class_descriptions WHERE class_index = ?", (class_idx,))
-        result = cursor.fetchone()
-        description = result['description'] if result else f"No detailed description available for {class_name}"
-        conn.close()
+        # Get description from the hardcoded dictionary
+        description = class_descriptions.get(class_idx, f"No detailed description available for {class_name}")
         
         # Prepare additional top predictions
         predictions = []
@@ -116,8 +108,9 @@ def classify_image():
             idx = top_indices[i].item()
             predictions.append({
                 'classIndex': idx,
-                'className': class_names[idx] if idx < len(class_names) else f"Class_{idx}",
-                'score': top_probs[i].item()
+                'className': class_names[str(idx)] if str(idx) in class_names else f"Class_{idx}",
+                'score': top_probs[i].item(),
+                'description': class_descriptions.get(idx, f"No detailed description available for {class_names[str(idx)] if str(idx) in class_names else f'Class_{idx}'}")
             })
         
         return jsonify({
@@ -134,47 +127,18 @@ def classify_image():
 
 @app.route('/api/description/<int:class_index>', methods=['GET'])
 def get_description(class_index):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT description FROM class_descriptions WHERE class_index = ?", (class_index,))
-    result = cursor.fetchone()
-    conn.close()
-    
-    if result:
-        return jsonify({
-            'success': True,
-            'description': result['description']
-        })
-    else:
-        # If description not found, return a placeholder
-        return jsonify({
-            'success': False,
-            'description': f"No detailed description available for {class_names[class_index] if class_index < len(class_names) else f'Class_{class_index}'}"
-        })
-
-# For demonstration, add a route to populate the database
-@app.route('/api/admin/add_description', methods=['POST'])
-def add_description():
-    data = request.json
-    if not data or 'class_index' not in data or 'description' not in data:
-        return jsonify({'error': 'Invalid data'}), 400
-    
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
     # Get class name from the index
-    class_name = class_names[data['class_index']] if data['class_index'] < len(class_names) else f"Class_{data['class_index']}"
+    class_name = class_names[str(class_index)] if str(class_index) in class_names else f"Class_{class_index}"
     
-    # Insert or update description
-    cursor.execute("""
-    INSERT OR REPLACE INTO class_descriptions (class_index, class_name, description) 
-    VALUES (?, ?, ?)
-    """, (data['class_index'], class_name, data['description']))
+    # Get description from the hardcoded dictionary
+    description = class_descriptions.get(class_index, f"No detailed description available for {class_name}")
     
-    conn.commit()
-    conn.close()
-    
-    return jsonify({'success': True})
+    return jsonify({
+        'success': True,
+        'description': description
+    })
+
+# No need for the admin route to add descriptions anymore
 
 if __name__ == '__main__':
     app.run(debug=True)

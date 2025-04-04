@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Use a global variable if set in HTML, or fallback to a default URL
     const API_BASE_URL = 'https://back-end-misty-haze-3575.fly.dev/';
     const CLASSIFY_ENDPOINT = `${API_BASE_URL}/api/classify`;
-    const DESCRIPTION_ENDPOINT = `${API_BASE_URL}/api/description`;
     
     console.log("Using API endpoint:", API_BASE_URL); // Debug log
     
@@ -141,28 +140,28 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             console.log("Received data:", data); // Debug log
             
-            // Process response from the updated backend
+            // Process response from the backend
             if (data.success) {
-                // Handle the main prediction
-                const mainPrediction = {
-                    classIndex: data.classIndex,
-                    className: data.className,
-                    description: data.description,
-                    score: 1.0 // Default to 1.0 if no score provided
-                };
-                
-                // Use the predictions array if available, otherwise create one with just the main prediction
-                currentPredictions = data.predictions || [mainPrediction];
+                // Store predictions and display results
+                currentPredictions = data.predictions || [];
                 
                 // Set the initial prediction index
                 currentPredictionIndex = 0;
                 
                 // Show the main prediction first
-                updateResultDisplay(mainPrediction);
-                
-                // Display alternative predictions if available
                 if (currentPredictions.length > 0) {
+                    updateResultDisplay(currentPredictions[0]);
                     displayAlternativePredictions(currentPredictions);
+                } else {
+                    // Fallback if no predictions array is provided
+                    const mainPrediction = {
+                        classIndex: data.classIndex,
+                        className: data.className,
+                        description: data.description,
+                        score: 1.0
+                    };
+                    currentPredictions = [mainPrediction];
+                    updateResultDisplay(mainPrediction);
                 }
                 
                 // Hide loading, show results
@@ -182,28 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update the result display with the given prediction
     function updateResultDisplay(prediction) {
         classTitle.textContent = prediction.className;
-        
-        // Use the description if provided, otherwise fetch it
-        if (prediction.description) {
-            classDescription.textContent = prediction.description;
-        } else {
-            classDescription.textContent = 'Loading description...';
-            fetch(`${DESCRIPTION_ENDPOINT}/${prediction.classIndex}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        classDescription.textContent = data.description;
-                        // Update the prediction object with the description for future reference
-                        prediction.description = data.description;
-                    } else {
-                        classDescription.textContent = 'Description not available.';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching description:', error);
-                    classDescription.textContent = 'Description not available.';
-                });
-        }
+        classDescription.textContent = prediction.description || 'Description not available.';
         
         // Highlight the current prediction in the alternatives list
         const cards = document.querySelectorAll('.prediction-card');
