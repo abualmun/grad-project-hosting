@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS  # Add this import
+from flask_cors import CORS
 import torch
 import torchvision.transforms as transforms
 from torchvision.models import resnet18
@@ -10,14 +10,14 @@ import sqlite3
 import json
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)
 
 # Model setup
 def load_model():
     # Load your pretrained model
     model = resnet18()
     # Modify the final fully connected layer to match your number of classes
-    num_classes = 14  # Replace with your actual number of classes
+    num_classes = 14  # Update this if your number of classes has changed
     model.fc = torch.nn.Linear(model.fc.in_features, num_classes)
     
     # Load your saved weights
@@ -35,13 +35,12 @@ transform = transforms.Compose([
 
 # Load class names
 def load_class_names():
-    # Replace this with your actual class names
     try:
         with open('class_names.json', 'r') as f:
             return json.load(f)
     except:
         # Placeholder class names if file doesn't exist
-        return [f"Class_{i}" for i in range(10)]
+        return [f"Class_{i}" for i in range(14)]
 
 # Database setup
 def get_db_connection():
@@ -81,35 +80,57 @@ def classify_image():
     if 'image' not in request.files:
         return jsonify({'error': 'No image provided'}), 400
     
-    file = request.files['image']
-    img_bytes = file.read()
-    img = Image.open(io.BytesIO(img_bytes)).convert('RGB')
-    
-    # Transform and process image
-    img_tensor = transform(img).unsqueeze(0)
-    
-    with torch.no_grad():
-        outputs = model(img_tensor)
-        probs = torch.nn.functional.softmax(outputs, dim=1)[0]
+    try:
+        file = request.files['image']
+        img_bytes = file.read()
+        img = Image.open(io.BytesIO(img_bytes)).convert('RGB')
         
-    # Get top 5 predictions (or fewer if there are fewer classes)
-    num_to_return = min(5, len(class_names))
-    top_probs, top_indices = torch.topk(probs, num_to_return)
-    
-    # Prepare results
-    predictions = []
-    for i in range(num_to_return):
-        class_idx = top_indices[i].item()
-        predictions.append({
+        # Transform and process image
+        img_tensor = transform(img).unsqueeze(0)
+        
+        with torch.no_grad():
+            outputs = model(img_tensor)
+            # Get the predicted class index directly
+            _, predicted_idx = torch.max(outputs, 1)
+            class_idx = predicted_idx.item()
+            
+            # Calculate probabilities for the top 5 classes
+            probs = torch.nn.functional.softmax(outputs, dim=1)[0]
+            num_to_return = min(5, len(class_names))
+            top_probs, top_indices = torch.topk(probs, num_to_return)
+            
+        # Get class name and description for the predicted class
+        class_name = class_names[class_idx] if class_idx < len(class_names) else f"Class_{class_idx}"
+        
+        # Get description from the database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT description FROM class_descriptions WHERE class_index = ?", (class_idx,))
+        result = cursor.fetchone()
+        description = result['description'] if result else f"No detailed description available for {class_name}"
+        conn.close()
+        
+        # Prepare additional top predictions
+        predictions = []
+        for i in range(num_to_return):
+            idx = top_indices[i].item()
+            predictions.append({
+                'classIndex': idx,
+                'className': class_names[idx] if idx < len(class_names) else f"Class_{idx}",
+                'score': top_probs[i].item()
+            })
+        
+        return jsonify({
+            'success': True,
             'classIndex': class_idx,
-            'className': class_names[class_idx] if class_idx < len(class_names) else f"Class_{class_idx}",
-            'score': top_probs[i].item()
+            'className': class_name,
+            'description': description,
+            'predictions': predictions  # Include top predictions for alternative options
         })
     
-    return jsonify({
-        'success': True,
-        'predictions': predictions
-    })
+    except Exception as e:
+        print(f"Error processing image: {str(e)}")
+        return jsonify({'error': f'Error processing image: {str(e)}'}), 500
 
 @app.route('/api/description/<int:class_index>', methods=['GET'])
 def get_description(class_index):

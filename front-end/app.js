@@ -19,10 +19,13 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentPredictionIndex = 0;
     let stream = null;
     
-    // API endpoints (change these to your actual deployed backend URLs)
-    const API_BASE_URL = 'https://sattam-back-end.onrender.com';
+    // API endpoints - Replace with your actual backend URL
+    // Use a global variable if set in HTML, or fallback to a default URL
+    const API_BASE_URL = window.API_URL || 'http://localhost:5000';
     const CLASSIFY_ENDPOINT = `${API_BASE_URL}/api/classify`;
     const DESCRIPTION_ENDPOINT = `${API_BASE_URL}/api/description`;
+    
+    console.log("Using API endpoint:", API_BASE_URL); // Debug log
     
     // Enable upload button only when an image is selected
     imageUpload.addEventListener('change', function() {
@@ -121,33 +124,53 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData();
         formData.append('image', file);
         
+        console.log("Sending image to:", CLASSIFY_ENDPOINT); // Debug log
+        
         // Send the image to the backend for classification
         fetch(CLASSIFY_ENDPOINT, {
             method: 'POST',
             body: formData
         })
         .then(response => {
+            console.log("Response status:", response.status); // Debug log
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error(`Network response was not ok: ${response.status}`);
             }
             return response.json();
         })
         .then(data => {
-            // Process predictions
-            currentPredictions = data.predictions;
-            currentPredictionIndex = 0;
+            console.log("Received data:", data); // Debug log
             
-            // Display the top prediction
-            if (currentPredictions.length > 0) {
-                updateResultDisplay(currentPredictions[0]);
-                displayAlternativePredictions(currentPredictions);
+            // Process response from the updated backend
+            if (data.success) {
+                // Handle the main prediction
+                const mainPrediction = {
+                    classIndex: data.classIndex,
+                    className: data.className,
+                    description: data.description,
+                    score: 1.0 // Default to 1.0 if no score provided
+                };
+                
+                // Use the predictions array if available, otherwise create one with just the main prediction
+                currentPredictions = data.predictions || [mainPrediction];
+                
+                // Set the initial prediction index
+                currentPredictionIndex = 0;
+                
+                // Show the main prediction first
+                updateResultDisplay(mainPrediction);
+                
+                // Display alternative predictions if available
+                if (currentPredictions.length > 0) {
+                    displayAlternativePredictions(currentPredictions);
+                }
+                
+                // Hide loading, show results
+                loadingElement.style.display = 'none';
+                resultsElement.style.display = 'block';
             } else {
-                throw new Error('No predictions returned');
+                throw new Error(data.error || 'Unknown error occurred');
             }
-            
-            // Hide loading, show results
-            loadingElement.style.display = 'none';
-            resultsElement.style.display = 'block';
         })
         .catch(error => {
             console.error('Error:', error);
@@ -159,14 +182,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update the result display with the given prediction
     function updateResultDisplay(prediction) {
         classTitle.textContent = prediction.className;
-        classDescription.textContent = prediction.description || 'Loading description...';
         
-        // If the description is not included in the prediction, fetch it from the database
-        if (!prediction.description) {
+        // Use the description if provided, otherwise fetch it
+        if (prediction.description) {
+            classDescription.textContent = prediction.description;
+        } else {
+            classDescription.textContent = 'Loading description...';
             fetch(`${DESCRIPTION_ENDPOINT}/${prediction.classIndex}`)
                 .then(response => response.json())
                 .then(data => {
-                    classDescription.textContent = data.description;
+                    if (data.success) {
+                        classDescription.textContent = data.description;
+                        // Update the prediction object with the description for future reference
+                        prediction.description = data.description;
+                    } else {
+                        classDescription.textContent = 'Description not available.';
+                    }
                 })
                 .catch(error => {
                     console.error('Error fetching description:', error);
@@ -194,11 +225,16 @@ document.addEventListener('DOMContentLoaded', function() {
         predictions.forEach((prediction, index) => {
             const predictionCard = document.createElement('div');
             predictionCard.className = `col prediction-card ${index === 0 ? 'border-primary bg-light' : ''}`;
+            
+            // Format the score as a percentage if available
+            const scoreDisplay = prediction.score ? 
+                `<p class="card-text">Confidence: ${(prediction.score * 100).toFixed(2)}%</p>` : '';
+            
             predictionCard.innerHTML = `
                 <div class="card h-100">
                     <div class="card-body">
                         <h5 class="card-title">${prediction.className}</h5>
-                        <p class="card-text">Confidence: ${(prediction.score * 100).toFixed(2)}%</p>
+                        ${scoreDisplay}
                     </div>
                 </div>
             `;

@@ -38,13 +38,34 @@
             width: 3rem;
             height: 3rem;
         }
+        .result-image-container {
+            max-height: 300px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .result-image-container img {
+            max-height: 100%;
+            max-width: 100%;
+            object-fit: contain;
+        }
+        .rtl-text {
+            direction: rtl;
+            text-align: right;
+        }
     </style>
+    <!-- Set the API URL before loading app.js -->
+    <script>
+        // Set your backend API URL here
+        window.API_URL = "http://localhost:5000"; // Change this to your actual deployed backend URL
+    </script>
 </head>
 <body>
     <div class="container py-5">
         <header class="text-center mb-5">
-            <h1 class="display-4">Image Classifier</h1>
-            <p class="lead">Upload an image or take a photo to classify it</p>
+            <h1 class="display-4">Saudi Landmarks Classifier</h1>
+            <p class="lead">Upload an image or take a photo to identify Saudi landmarks</p>
         </header>
         
         <div class="row justify-content-center mb-5">
@@ -102,12 +123,14 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-4 text-center">
-                                <img id="resultImage" class="img-fluid rounded" alt="Classified image">
+                            <div class="col-md-4">
+                                <div class="result-image-container mb-3">
+                                    <img id="resultImage" class="img-fluid rounded" alt="Classified image">
+                                </div>
                             </div>
                             <div class="col-md-8">
-                                <h4 id="classTitle">Class Title</h4>
-                                <p id="classDescription">Class description will appear here.</p>
+                                <h4 id="classTitle" class="rtl-text mb-3"></h4>
+                                <p id="classDescription" class="rtl-text"></p>
                                 <button id="wrongClassBtn" class="btn btn-warning">This classification is incorrect</button>
                             </div>
                         </div>
