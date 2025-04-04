@@ -3,7 +3,7 @@
   command = ""  # No build command needed for a static site
 
 [build.environment]
-  API_URL = "https://your-backend-url.app"  # Replace with your actual backend URL
+  API_URL = "https://sattam-back-end.onrender.com"  # Replace with your actual backend URL
 
 [[redirects]]
   from = "/*"
