@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let stream = null;
     
     // API endpoints (change these to your actual deployed backend URLs)
-    const API_BASE_URL = process.env.API_URL || 'https://your-backend-url.app';
+    const API_BASE_URL = 'https://sattam-back-end.onrender.com';
     const CLASSIFY_ENDPOINT = `${API_BASE_URL}/api/classify`;
     const DESCRIPTION_ENDPOINT = `${API_BASE_URL}/api/description`;
     
