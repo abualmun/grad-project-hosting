@@ -17,26 +17,31 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Class names
 class_names = [
-    "الحرم المكي",
-    "العلا",
-    "المسجد النبوي",
-    "جبل أحد",
-    "برج المملكة",
-    "المصمك",
-    "برج الفيصلية",
-    "وادي حنيفة",
-    "فقيه أكواريوم",
-    "كورنيش جدة",
-    "برج مياه الخبر",
-    "مسجد قباء",
-    "مسجد الراجحي",
-    "المتحف الوطني"
+    "الحرم المكي",              
+    "العلا",                    
+    "برج مياه الخبر",          
+    "مسجد قباء",               
+    "مسجد الراجحي",            
+    "المتحف الوطني",
+    "المسجد النبوي",            
+    "جبل أحد",                  
+    "برج المملكة",              
+    "المصمك",                   
+    "برج الفيصلية",             
+    "وادي حنيفة",               
+    "فقيه أكواريوم",            
+    "كورنيش جدة"            
+               
 ]
 
 # Class descriptions for tourists
 class_descriptions = {
     "الحرم المكي": "The Grand Mosque (Al-Haram Mosque) in Mecca is the holiest site in Islam. It surrounds the Kaaba, the building Muslims face during prayer. Millions visit annually for Hajj and Umrah pilgrimages.",
     "العلا": "AlUla is a stunning ancient city featuring Hegra (Madain Saleh), Saudi Arabia's first UNESCO World Heritage site with well-preserved Nabataean tombs carved into sandstone mountains.",
+    "برج مياه الخبر": "Khobar Water Tower is a distinctive landmark in the Eastern Province, offering panoramic views of the Arabian Gulf. Its unique design makes it an iconic symbol of the city.",
+    "مسجد قباء": "Quba Mosque in Medina is the oldest mosque in the world, established by Prophet Muhammad. Muslims believe praying here earns rewards equivalent to performing an Umrah.",
+    "مسجد الراجحي": "Al-Rajhi Mosque in Riyadh is one of the largest mosques in Saudi Arabia, known for its stunning architecture that blends traditional Islamic design with modern elements.",
+    "المتحف الوطني": "The National Museum in Riyadh showcases Saudi Arabia's rich heritage through artifacts, interactive displays, and multimedia presentations covering the Arabian Peninsula's history.",
     "المسجد النبوي": "The Prophet's Mosque in Medina is Islam's second holiest site, housing the tomb of Prophet Muhammad. Its distinctive green dome and expansive courtyards welcome millions of pilgrims yearly.",
     "جبل أحد": "Mount Uhud in Medina is historically significant as the site of the Battle of Uhud in 625 CE. It offers panoramic views and holds deep spiritual meaning for Muslims.",
     "برج المملكة": "Kingdom Centre Tower in Riyadh is one of Saudi Arabia's most iconic skyscrapers, featuring a distinctive keyhole design. The Sky Bridge observation deck offers spectacular city views.",
@@ -44,12 +49,8 @@ class_descriptions = {
     "برج الفيصلية": "Al Faisaliyah Tower in Riyadh was the first skyscraper in Saudi Arabia. Its distinctive design culminates in a glass globe housing a restaurant with panoramic city views.",
     "وادي حنيفة": "Wadi Hanifah is a valley that runs through Riyadh, transformed from a waste dump into an environmental rehabilitation project with parks, walking paths, and recreational areas.",
     "فقيه أكواريوم": "Fakieh Aquarium in Jeddah is the first public aquarium in Saudi Arabia, housing over 200 species of marine life. It offers visitors educational and interactive experiences about sea life.",
-    "كورنيش جدة": "Jeddah Corniche is a 30km coastal resort area with recreational activities, pavilions, and public art including the famous open-air sculpture museum featuring works by international artists.",
-    "برج مياه الخبر": "Khobar Water Tower is a distinctive landmark in the Eastern Province, offering panoramic views of the Arabian Gulf. Its unique design makes it an iconic symbol of the city.",
-    "مسجد قباء": "Quba Mosque in Medina is the oldest mosque in the world, established by Prophet Muhammad. Muslims believe praying here earns rewards equivalent to performing an Umrah.",
-    "مسجد الراجحي": "Al-Rajhi Mosque in Riyadh is one of the largest mosques in Saudi Arabia, known for its stunning architecture that blends traditional Islamic design with modern elements.",
-    "المتحف الوطني": "The National Museum in Riyadh showcases Saudi Arabia's rich heritage through artifacts, interactive displays, and multimedia presentations covering the Arabian Peninsula's history."
-}
+    "كورنيش جدة": "Jeddah Corniche is a 30km coastal resort area with recreational activities, pavilions, and public art including the famous open-air sculpture museum featuring works by international artists."
+ }
 
 # Define the transform for input images
 transform = transforms.Compose([
