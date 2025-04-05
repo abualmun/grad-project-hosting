@@ -1,144 +1,135 @@
-from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS
+from flask import Flask, request, jsonify
 import torch
 import torchvision.transforms as transforms
-from torchvision.models import resnet18
+from torchvision import models
+import torch.nn as nn
 from PIL import Image
+import base64
 import io
 import os
-import json
+from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)
+CORS(app)  # Enable CORS for all routes
 
-# Model setup
-def load_model():
-    # Load your pretrained model
-    model = resnet18()
-    # Modify the final fully connected layer to match your number of classes
-    num_classes = 14  # Update this if your number of classes has changed
-    model.fc = torch.nn.Linear(model.fc.in_features, num_classes)
-    
-    # Load your saved weights
-    model.load_state_dict(torch.load('model_weights.pth', map_location=torch.device('cpu')))
+# Set device
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Class names
+class_names = [
+    "الحرم المكي",
+    "العلا",
+    "المسجد النبوي",
+    "جبل أحد",
+    "برج المملكة",
+    "المصمك",
+    "برج الفيصلية",
+    "وادي حنيفة",
+    "فقيه أكواريوم",
+    "كورنيش جدة",
+    "برج مياه الخبر",
+    "مسجد قباء",
+    "مسجد الراجحي",
+    "المتحف الوطني"
+]
+
+# Class descriptions for tourists
+class_descriptions = {
+    "الحرم المكي": "The Grand Mosque (Al-Haram Mosque) in Mecca is the holiest site in Islam. It surrounds the Kaaba, the building Muslims face during prayer. Millions visit annually for Hajj and Umrah pilgrimages.",
+    "العلا": "AlUla is a stunning ancient city featuring Hegra (Madain Saleh), Saudi Arabia's first UNESCO World Heritage site with well-preserved Nabataean tombs carved into sandstone mountains.",
+    "المسجد النبوي": "The Prophet's Mosque in Medina is Islam's second holiest site, housing the tomb of Prophet Muhammad. Its distinctive green dome and expansive courtyards welcome millions of pilgrims yearly.",
+    "جبل أحد": "Mount Uhud in Medina is historically significant as the site of the Battle of Uhud in 625 CE. It offers panoramic views and holds deep spiritual meaning for Muslims.",
+    "برج المملكة": "Kingdom Centre Tower in Riyadh is one of Saudi Arabia's most iconic skyscrapers, featuring a distinctive keyhole design. The Sky Bridge observation deck offers spectacular city views.",
+    "المصمك": "Al Masmak Fortress in Riyadh is a clay and mud-brick fort that played a pivotal role in Saudi Arabia's history. Now a museum, it showcases artifacts from the kingdom's unification.",
+    "برج الفيصلية": "Al Faisaliyah Tower in Riyadh was the first skyscraper in Saudi Arabia. Its distinctive design culminates in a glass globe housing a restaurant with panoramic city views.",
+    "وادي حنيفة": "Wadi Hanifah is a valley that runs through Riyadh, transformed from a waste dump into an environmental rehabilitation project with parks, walking paths, and recreational areas.",
+    "فقيه أكواريوم": "Fakieh Aquarium in Jeddah is the first public aquarium in Saudi Arabia, housing over 200 species of marine life. It offers visitors educational and interactive experiences about sea life.",
+    "كورنيش جدة": "Jeddah Corniche is a 30km coastal resort area with recreational activities, pavilions, and public art including the famous open-air sculpture museum featuring works by international artists.",
+    "برج مياه الخبر": "Khobar Water Tower is a distinctive landmark in the Eastern Province, offering panoramic views of the Arabian Gulf. Its unique design makes it an iconic symbol of the city.",
+    "مسجد قباء": "Quba Mosque in Medina is the oldest mosque in the world, established by Prophet Muhammad. Muslims believe praying here earns rewards equivalent to performing an Umrah.",
+    "مسجد الراجحي": "Al-Rajhi Mosque in Riyadh is one of the largest mosques in Saudi Arabia, known for its stunning architecture that blends traditional Islamic design with modern elements.",
+    "المتحف الوطني": "The National Museum in Riyadh showcases Saudi Arabia's rich heritage through artifacts, interactive displays, and multimedia presentations covering the Arabian Peninsula's history."
+}
+
+# Define the transform for input images
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
+
+# Load the model
+def load_model(model_path, num_classes):
+    model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
+    model.fc = nn.Linear(in_features=model.fc.in_features, out_features=num_classes)
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    model = model.to(device)
     model.eval()
     return model
 
-# Image transformation
-transform = transforms.Compose([
-    transforms.Resize(256),
-    transforms.CenterCrop(224),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-])
-
-# Load class names
-def load_class_names():
+# Function to predict from base64 image
+def predict_image_base64(base64_string, model, transform):
     try:
-        with open('class_names.json', 'r') as f:
-            return json.load(f)
-    except:
-        # Placeholder class names if file doesn't exist
-        return [f"Class_{i}" for i in range(14)]
-
-# Class descriptions - hardcoded for simplicity
-class_descriptions = {
-    0: "الحرم المكي (The Holy Mosque in Mecca) - The holiest mosque in Islam and the primary destination for the Hajj and Umrah pilgrimages. It surrounds the Kaaba, considered the most sacred site in Islam.",
-    1: "العلا (AlUla) - A historic city in northwestern Saudi Arabia, known for its stunning natural rock formations, archaeological sites including Hegra (Saudi Arabia's first UNESCO World Heritage site), and annual Winter at Tantora festival.",
-    2: "المسجد النبوي (The Prophet's Mosque) - Located in Medina, this is the second holiest site in Islam. It was built by Prophet Muhammad and houses his tomb.",
-    3: "جبل أحد (Mount Uhud) - A mountain north of Medina, famous for being the site of the Battle of Uhud fought in 625 CE. It has great historical and religious significance in Islamic history.",
-    4: "برج المملكة (Kingdom Tower) - Also known as Kingdom Centre, it's a 99-story skyscraper in Riyadh. With its distinctive inverted parabolic arch topped by a sky bridge, it's one of Saudi Arabia's most recognizable landmarks.",
-    5: "المصمك (Masmak Fort) - A clay and mud-brick fort in the old quarter of Riyadh, with distinctive features including high walls and watchtowers. It played a significant role in the history of Saudi Arabia's unification.",
-    6: "برج الفيصلية (Al Faisaliyah Tower) - One of the most distinctive skyscrapers in Riyadh, featuring a golden ball near its top that contains a restaurant with panoramic views of the city.",
-    7: "وادي حنيفة (Wadi Hanifa) - A valley that runs through the city of Riyadh. It has been transformed into an environmental, recreational and tourist destination with parks, walking paths, and water features.",
-    8: "فقيه أكواريوم (Fakieh Aquarium) - Located in Jeddah, it's the first and largest public aquarium in Saudi Arabia, housing a wide variety of marine life and offering educational exhibits.",
-    9: "كورنيش جدة (Jeddah Corniche) - A 30 km coastal resort area in Jeddah along the Red Sea. It features recreational areas, pavilions, large-scale sculptures, and the King Fahd Fountain, the tallest water fountain in the world.",
-    10: "برج مياه الخبر (Khobar Water Tower) - A distinctive landmark in the city of Khobar in the Eastern Province, known for its unique architectural design.",
-    11: "مسجد قباء (Quba Mosque) - Located in the outskirts of Medina, it's the oldest mosque in the world. According to Islamic tradition, it was founded by Prophet Muhammad when he arrived in Medina.",
-    12: "مسجد الراجحي (Al-Rajhi Mosque) - One of the largest mosques in Riyadh, known for its beautiful architecture combining traditional Islamic elements with modern design.",
-    13: "المتحف الوطني (The National Museum) - Located in Riyadh, it's the largest museum in Saudi Arabia showcasing the history, culture, and civilization of the Arabian Peninsula."
-}
-
-# Initialize model and class names on startup
-model = load_model()
-class_names = load_class_names()
-
-# Routes
-@app.route('/')
-def index():
-    return send_from_directory(app.static_folder, 'index.html')
-
-@app.route('/app.js')
-def serve_js():
-    return send_from_directory(app.static_folder, 'app.js')
-
-@app.route('/api/classify', methods=['POST'])
-def classify_image():
-    if 'image' not in request.files:
-        return jsonify({'error': 'No image provided'}), 400
-    
-    try:
-        file = request.files['image']
-        img_bytes = file.read()
-        img = Image.open(io.BytesIO(img_bytes)).convert('RGB')
+        # Decode base64 image
+        image_data = base64.b64decode(base64_string)
+        image = Image.open(io.BytesIO(image_data)).convert("RGB")
         
-        # Transform and process image
-        img_tensor = transform(img).unsqueeze(0)
+        # Transform and predict
+        image_tensor = transform(image).unsqueeze(0).to(device)
         
         with torch.no_grad():
-            outputs = model(img_tensor)
-            # Get the predicted class index directly
-            _, predicted_idx = torch.max(outputs, 1)
-            class_idx = predicted_idx.item()
+            output = model(image_tensor)
+            probabilities = torch.nn.functional.softmax(output, dim=1)[0]
+            _, predicted = torch.max(output, 1)
+            predicted_class_index = predicted.item()
+            predicted_class = class_names[predicted_class_index]
+            confidence = probabilities[predicted_class_index].item() * 100
             
-            # Calculate probabilities for the top 5 classes
-            probs = torch.nn.functional.softmax(outputs, dim=1)[0]
-            num_to_return = min(5, len(class_names))
-            top_probs, top_indices = torch.topk(probs, num_to_return)
-            
-        # Get class name and description for the predicted class
-        class_name = class_names[str(class_idx)] if str(class_idx) in class_names else f"Class_{class_idx}"
-        
-        # Get description from the hardcoded dictionary
-        description = class_descriptions.get(class_idx, f"No detailed description available for {class_name}")
-        
-        # Prepare additional top predictions
-        predictions = []
-        for i in range(num_to_return):
-            idx = top_indices[i].item()
-            predictions.append({
-                'classIndex': idx,
-                'className': class_names[str(idx)] if str(idx) in class_names else f"Class_{idx}",
-                'score': top_probs[i].item(),
-                'description': class_descriptions.get(idx, f"No detailed description available for {class_names[str(idx)] if str(idx) in class_names else f'Class_{idx}'}")
-            })
-        
-        return jsonify({
-            'success': True,
-            'classIndex': class_idx,
-            'className': class_name,
-            'description': description,
-            'predictions': predictions  # Include top predictions for alternative options
-        })
-    
+        return {
+            "success": True,
+            "class": predicted_class,
+            "class_index": predicted_class_index,
+            "confidence": round(confidence, 2),
+            "description": class_descriptions[predicted_class]
+        }
     except Exception as e:
-        print(f"Error processing image: {str(e)}")
-        return jsonify({'error': f'Error processing image: {str(e)}'}), 500
+        return {"success": False, "error": str(e)}
 
-@app.route('/api/description/<int:class_index>', methods=['GET'])
-def get_description(class_index):
-    # Get class name from the index
-    class_name = class_names[str(class_index)] if str(class_index) in class_names else f"Class_{class_index}"
-    
-    # Get description from the hardcoded dictionary
-    description = class_descriptions.get(class_index, f"No detailed description available for {class_name}")
-    
-    return jsonify({
-        'success': True,
-        'description': description
-    })
+# Load model (path will be updated for deployment)
+model_path = os.environ.get("MODEL_PATH", "./model.pth")
+num_classes = len(class_names)
 
-# No need for the admin route to add descriptions anymore
+# We'll load the model when a request comes in to avoid loading during startup
+model = None
+
+@app.route('/api/predict', methods=['POST'])
+def predict():
+    global model
+    
+    # Load model if not already loaded
+    if model is None:
+        try:
+            model = load_model(model_path, num_classes)
+        except Exception as e:
+            return jsonify({"success": False, "error": f"Failed to load model: {str(e)}"}), 500
+    
+    # Get image from request
+    if 'image' not in request.json:
+        return jsonify({"success": False, "error": "No image provided"}), 400
+    
+    # Get base64 image (remove data:image/jpeg;base64, prefix if present)
+    base64_image = request.json['image']
+    if ',' in base64_image:
+        base64_image = base64_image.split(',')[1]
+    
+    # Make prediction
+    result = predict_image_base64(base64_image, model, transform)
+    return jsonify(result)
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy", "message": "API is running"})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
