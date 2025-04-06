@@ -35,22 +35,23 @@ class_names = [
 ]
 
 # Class descriptions for tourists
-class_descriptions = {
-    "الحرم المكي": "The Grand Mosque (Al-Haram Mosque) in Mecca is the holiest site in Islam. It surrounds the Kaaba, the building Muslims face during prayer. Millions visit annually for Hajj and Umrah pilgrimages.",
-    "العلا": "AlUla is a stunning ancient city featuring Hegra (Madain Saleh), Saudi Arabia's first UNESCO World Heritage site with well-preserved Nabataean tombs carved into sandstone mountains.",
-    "برج مياه الخبر": "Khobar Water Tower is a distinctive landmark in the Eastern Province, offering panoramic views of the Arabian Gulf. Its unique design makes it an iconic symbol of the city.",
-    "مسجد قباء": "Quba Mosque in Medina is the oldest mosque in the world, established by Prophet Muhammad. Muslims believe praying here earns rewards equivalent to performing an Umrah.",
-    "مسجد الراجحي": "Al-Rajhi Mosque in Riyadh is one of the largest mosques in Saudi Arabia, known for its stunning architecture that blends traditional Islamic design with modern elements.",
-    "المتحف الوطني": "The National Museum in Riyadh showcases Saudi Arabia's rich heritage through artifacts, interactive displays, and multimedia presentations covering the Arabian Peninsula's history.",
-    "المسجد النبوي": "The Prophet's Mosque in Medina is Islam's second holiest site, housing the tomb of Prophet Muhammad. Its distinctive green dome and expansive courtyards welcome millions of pilgrims yearly.",
-    "جبل أحد": "Mount Uhud in Medina is historically significant as the site of the Battle of Uhud in 625 CE. It offers panoramic views and holds deep spiritual meaning for Muslims.",
-    "برج المملكة": "Kingdom Centre Tower in Riyadh is one of Saudi Arabia's most iconic skyscrapers, featuring a distinctive keyhole design. The Sky Bridge observation deck offers spectacular city views.",
-    "المصمك": "Al Masmak Fortress in Riyadh is a clay and mud-brick fort that played a pivotal role in Saudi Arabia's history. Now a museum, it showcases artifacts from the kingdom's unification.",
-    "برج الفيصلية": "Al Faisaliyah Tower in Riyadh was the first skyscraper in Saudi Arabia. Its distinctive design culminates in a glass globe housing a restaurant with panoramic city views.",
-    "وادي حنيفة": "Wadi Hanifah is a valley that runs through Riyadh, transformed from a waste dump into an environmental rehabilitation project with parks, walking paths, and recreational areas.",
-    "فقيه أكواريوم": "Fakieh Aquarium in Jeddah is the first public aquarium in Saudi Arabia, housing over 200 species of marine life. It offers visitors educational and interactive experiences about sea life.",
-    "كورنيش جدة": "Jeddah Corniche is a 30km coastal resort area with recreational activities, pavilions, and public art including the famous open-air sculpture museum featuring works by international artists."
- }
+{
+    "الحرم المكي": "الحرم المكي في مكة هو أقدس موقع في الإسلام. يحيط بالكعبة، المبنى الذي يتوجه المسلمون نحوه أثناء الصلاة. يزور الملايين الحرم سنويًا لأداء مناسك الحج والعمرة.",
+    "العلا": "العلا هي مدينة تاريخية رائعة تحتوي على مدائن صالح، أول موقع سعودي ضمن قائمة التراث العالمي لليونسكو، وهي مشهورة بالقبور النبطية المنحوتة في الجبال الرملية.",
+    "برج مياه الخبر": "برج مياه الخبر هو معلم مميز في المنطقة الشرقية، يوفر إطلالات بانورامية على الخليج العربي. تصميمه الفريد يجعله رمزًا مميزًا للمدينة.",
+    "مسجد قباء": "مسجد قباء في المدينة المنورة هو أقدم مسجد في العالم، أسسه النبي محمد صلى الله عليه وسلم. يعتقد المسلمون أن الصلاة هنا تعادل ثواب أداء عمرة.",
+    "مسجد الراجحي": "مسجد الراجحي في الرياض هو واحد من أكبر المساجد في السعودية، ويشتهر بتصميمه المعماري الرائع الذي يمزج بين التصميم الإسلامي التقليدي والعناصر الحديثة.",
+    "المتحف الوطني": "المتحف الوطني في الرياض يعرض تراث السعودية الغني من خلال القطع الأثرية والعروض التفاعلية والعروض متعددة الوسائط التي تغطي تاريخ شبه الجزيرة العربية.",
+    "المسجد النبوي": "المسجد النبوي في المدينة المنورة هو ثاني أقدس موقع في الإسلام، ويضم قبر النبي محمد صلى الله عليه وسلم. قبة المسجد الخضراء وساحاته الواسعة تستقبل الملايين من الزوار سنويًا.",
+    "جبل أحد": "جبل أحد في المدينة المنورة له أهمية تاريخية كونه موقع معركة أحد في عام 625م. يوفر إطلالات بانورامية ويحمل معاني روحية عميقة للمسلمين.",
+    "برج المملكة": "برج المملكة في الرياض هو واحد من أبرز ناطحات السحاب في السعودية، ويتميز بتصميمه الفريد الذي يشبه المفتاح. توفر منصة السماء إطلالات رائعة على المدينة.",
+    "المصمك": "قصر المصمك في الرياض هو قلعة مبنية من الطين والطوب لعبت دورًا محوريًا في تاريخ المملكة العربية السعودية. ويعد الآن متحفًا يعرض قطعًا أثرية من تاريخ توحيد المملكة.",
+    "برج الفيصلية": "برج الفيصلية في الرياض هو أول ناطحة سحاب في السعودية. يتميز تصميمه الفريد الذي ينتهي بكرة زجاجية تضم مطعمًا يقدم إطلالات بانورامية على المدينة.",
+    "وادي حنيفة": "وادي حنيفة هو وادٍ يمتد عبر الرياض، وقد تم تحويله من مكب نفايات إلى مشروع بيئي يتضمن حدائق ومسارات مشي ومناطق ترفيهية.",
+    "فقيه أكواريوم": "أكواريوم فقيه في جدة هو أول أكواريوم عام في السعودية، ويضم أكثر من 200 نوع من الكائنات البحرية. يقدم للزوار تجارب تعليمية وتفاعلية حول الحياة البحرية.",
+    "كورنيش جدة": "كورنيش جدة هو منطقة سياحية ساحلية تمتد على طول 30 كيلومترًا، وتحتوي على أنشطة ترفيهية وأجنحة وفن عام، بما في ذلك المتحف المفتوح للتماثيل الذي يضم أعمالًا لفنانين دوليين."
+}
+
 
 # Define the transform for input images
 transform = transforms.Compose([
