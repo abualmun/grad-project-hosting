@@ -13,22 +13,17 @@ function App() {
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
-  // API endpoint - change this to your deployed backend URL
   const API_URL = 'https://sattam-back-end.onrender.com/api/predict';
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setSelectedImage(file);
-      
-      // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewImage(reader.result);
       };
       reader.readAsDataURL(file);
-      
-      // Reset prediction
       setPrediction(null);
       setError(null);
     }
@@ -38,15 +33,11 @@ function App() {
     const file = e.target.files[0];
     if (file) {
       setSelectedImage(file);
-      
-      // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewImage(reader.result);
       };
       reader.readAsDataURL(file);
-      
-      // Reset prediction
       setPrediction(null);
       setError(null);
     }
@@ -62,20 +53,15 @@ function App() {
 
   const handleClassify = async () => {
     if (!selectedImage) {
-      setError("Please select an image first");
+      setError("يرجى اختيار صورة أولاً");
       return;
     }
-    
     setLoading(true);
     setError(null);
-    
     try {
-      // Convert image to base64
       const reader = new FileReader();
       reader.onloadend = async () => {
         const base64Image = reader.result;
-        
-        // Call API
         const response = await fetch(API_URL, {
           method: 'POST',
           headers: {
@@ -83,20 +69,17 @@ function App() {
           },
           body: JSON.stringify({ image: base64Image }),
         });
-        
         const data = await response.json();
-        
         if (data.success) {
           setPrediction(data);
         } else {
-          setError(data.error || "Failed to classify image");
+          setError(data.error || "فشل في التعرف على الصورة");
         }
-        
         setLoading(false);
       };
       reader.readAsDataURL(selectedImage);
     } catch (err) {
-      setError("Error connecting to the server. Please try again.");
+      setError("حدث خطأ في الاتصال بالخادم. حاول مرة أخرى.");
       setLoading(false);
     }
   };
@@ -109,10 +92,10 @@ function App() {
   };
 
   return (
-    <div className="app">
+    <div className="app" dir="rtl">
       <header>
-        <h1>Discover Saudi Arabia</h1>
-        <p className="subtitle">Upload a photo of a landmark to learn more about it</p>
+        <h1>استكشف السعودية</h1>
+        <p className="subtitle">ارفع صورة لمعْلَم للتعرف عليه أكثر</p>
       </header>
 
       <main>
@@ -120,20 +103,16 @@ function App() {
           <div className="intro-section">
             <img 
               src={classificationImage} 
-              alt="Saudi Landmarks" 
+              alt="معالم سعودية" 
               className="intro-image" 
             />
             <div className="intro-text">
-              <h2>Welcome to Saudi Landmark Explorer</h2>
+              <h2>مرحبًا بك في مستكشف معالم السعودية</h2>
               <p>
-                Traveling in Saudi Arabia and curious about the landmarks you see?
-                Our AI-powered app can identify famous Saudi landmarks and provide 
-                you with information about them. Simply take a photo or upload an 
-                existing image to get started!
+                هل تسافر في السعودية وتتساءل عن المعالم التي تراها؟ تطبيقنا المدعوم بالذكاء الاصطناعي يمكنه التعرف على المعالم الشهيرة في السعودية وتقديم معلومات عنها. فقط التقط صورة أو قم برفع صورة موجودة لبدء الاستخدام!
               </p>
               <p>
-                We can identify 14 famous landmarks including Al-Haram Mosque, 
-                AlUla, The Prophet's Mosque, and many more.
+                نستطيع التعرف على 14 معلمًا شهيرًا بما في ذلك المسجد الحرام، العلا، المسجد النبوي، وغيرهم الكثير.
               </p>
             </div>
           </div>
@@ -146,7 +125,7 @@ function App() {
                 className="upload-button" 
                 onClick={handleUploadClick}
               >
-                <FaUpload /> Upload Image
+                <FaUpload /> رفع صورة
               </button>
               <input
                 type="file"
@@ -160,7 +139,7 @@ function App() {
                 className="camera-button" 
                 onClick={handleCameraClick}
               >
-                <FaCamera /> Take Photo
+                <FaCamera /> التقاط صورة
               </button>
               <input
                 type="file"
@@ -176,7 +155,7 @@ function App() {
               <div className="preview-container">
                 <img 
                   src={previewImage} 
-                  alt="Preview" 
+                  alt="معاينة" 
                   className="preview-image" 
                 />
                 <button 
@@ -184,7 +163,7 @@ function App() {
                   onClick={handleClassify}
                   disabled={loading}
                 >
-                  {loading ? "Classifying..." : "Identify Landmark"}
+                  {loading ? "جارٍ التعرف..." : "تعرّف على المعلم"}
                 </button>
               </div>
             )}
@@ -196,39 +175,29 @@ function App() {
             <div className="result-container">
               <img 
                 src={previewImage} 
-                alt="Uploaded" 
+                alt="تم الرفع" 
                 className="result-image" 
               />
               
               <div className="result-details">
-                <h2>Landmark Identified!</h2>
+                <h2>تم التعرف على المعلم!</h2>
                 <div className="result-name">
                   <span>{prediction.class}</span>
                   <div className="confidence">
-                    Confidence: {prediction.confidence}%
+                    نسبة الدقة: {prediction.confidence}%
                   </div>
                 </div>
-                
                 <div className="result-description">
                   {prediction.description}
                 </div>
-                
-                <button 
-                  className="try-again-button" 
-                  onClick={handleReset}
-                >
-                  <FaRedo /> Try Another Image
-                </button>
               </div>
             </div>
+            <button className="reset-button" onClick={handleReset}>
+              <FaRedo /> إعادة تعرّف
+            </button>
           </div>
         )}
       </main>
-
-      <footer>
-        <p>Explore the beauty and history of Saudi Arabia</p>
-        <p>© 2025 Saudi Landmark Explorer</p>
-      </footer>
     </div>
   );
 }
